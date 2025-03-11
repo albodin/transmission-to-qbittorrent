@@ -55,7 +55,7 @@ services:
         ipv4_address: 172.28.1.11
     restart: unless-stopped
   transmission-to-qbittorrent:
-    build: .
+    image: ghcr.io/albodin/transmission-to-qbittorrent:main
     container_name: transmission-to-qbittorrent
     environment:
       - ENVIRON_CONFIG=true
