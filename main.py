@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from pathlib import Path
 from typing import Literal
@@ -7,10 +8,32 @@ from urllib.parse import urlparse
 import qbittorrentapi
 import transmission_rpc
 
+def get_config():
+    return {
+        "skip_check": os.environ.get("SKIP_CHECK", "true"),
+        "qbittorrent": {
+            "host": os.environ.get("QBITTORRENT_HOST", "localhost"),
+            "port": int(os.environ.get("QBITTORRENT_PORT", "8080")),
+            "username": os.environ.get("QBITTORRENT_USERNAME", "admin"),
+            "password": os.environ.get("QBITTORRENT_PASSWORD", "adminadmin")
+        },
+        "transmission": {
+            "protocol": os.environ.get("TRANSMISSION_PROTOCOL", "http"),
+            "host": os.environ.get("TRANSMISSION_HOST", "localhost"),
+            "port": int(os.environ.get("TRANSMISSION_PORT", "9091")),
+            "path": os.environ.get("TRANSMISSION_PATH", "/transmission"),
+            "username": os.environ.get("TRANSMISSION_USERNAME", ""),
+            "password": os.environ.get("TRANSMISSION_PASSWORD", ""),
+            "torrent_dir": os.environ.get("TRANSMISSION_TORRENT_DIR", "~/.config/transmission-daemon/torrents")
+        }
+    }
 
 def main():
-    # Get config from config.json.
-    config: dict = json.load(open('./config.json', 'r'))
+    # Get config
+    if os.environ.get("ENVIRON_CONFIG"):
+        config = get_config()
+    else:
+        config: dict = json.load(open('./config.json', 'r'))
 
     # Skip check or not.
     skip_check: bool = config['skip_check']
@@ -53,7 +76,7 @@ def main():
     )
 
     # Check if login is successful.
-    tr_session = tr_client.session_stats()
+    tr_session = tr_client.get_session()
     print(f"Connected to Transmission {tr_session.version}.")
 
     # Get all hashes of torrents in qBittorrent.
@@ -67,12 +90,14 @@ def main():
 
     for tr_torrent in tr_torrents:
         # Pause the torrent in Transmission.
-        tr_torrent.stop()
+        tr_client.stop_torrent(tr_torrent.id)
 
         # Skip torrents that already exist in qBittorrent.
         if tr_torrent.hashString in qb_torrent_hashes:
             print(f"Torrent {tr_torrent.name} already exists in qBittorrent, skipping.")
             continue
+
+        category: str = Path(tr_torrent.download_dir).name
 
         # Get torrent file path.
         tr_torrent_path = str(Path(tr_torrent_dir).expanduser().joinpath(tr_torrent.hashString + '.torrent').absolute())
@@ -81,14 +106,14 @@ def main():
         qb_client.torrents_add(
             torrent_files=open(tr_torrent_path, 'rb'),
             save_path=tr_torrent.download_dir,
+            rename=tr_torrent.name,
+            category=category,
+            tags=tr_torrent.labels,
             is_skip_checking=skip_check,
             is_paused=True
         )
 
-        try:
-            tr_torrent_tracker_domain = urlparse(tr_torrent.trackers[0]['announce']).netloc
-        except IndexError:
-            tr_torrent_tracker_domain = 'None'
+        tr_torrent_tracker_domain = urlparse(tr_torrent.trackers[0].announce).netloc
         print(f"Torrent: {tr_torrent.name} Path: {tr_torrent.download_dir} Tracker: {tr_torrent_tracker_domain}")
 
         time.sleep(1)
