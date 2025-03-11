@@ -40,12 +40,35 @@ Transfer all torrents in [Transmission](https://transmissionbt.com/) to [qBittor
 7. After running, start torrents manually.
 
 ## Usage - Compose
+Example compose:
+```yaml
+services:
+  transmission-to-qbittorrent:
+    image: ghcr.io/albodin/transmission-to-qbittorrent:main
+    container_name: transmission-to-qbittorrent
+    environment:
+      - ENVIRON_CONFIG=true
+      - SKIP_CHECK=true
+      - QBITTORRENT_HOST=qbittorrent
+      - QBITTORRENT_PORT=8080
+      - QBITTORRENT_USERNAME=admin
+      - QBITTORRENT_PASSWORD=adminadmin
+      - TRANSMISSION_PROTOCOL=http
+      - TRANSMISSION_HOST=transmission
+      - TRANSMISSION_PORT=9091
+      - TRANSMISSION_PATH=/transmission/rpc
+      - TRANSMISSION_USERNAME=
+      - TRANSMISSION_PASSWORD=
+      - TRANSMISSION_TORRENT_DIR=/data/transmission/data/torrents
+    volumes:
+    #  - ./config.json:/app/config.json:ro
+      - ./data:/data
+```
+Or reference [compose.yaml](compose.yaml) to see an example of all 3 apps.
 
-1. Look at provided `compose.yaml` file to example on how to use.
+1. Set all of the appropriate environment variables or mount your config file. Set `ENVIRON_CONFIG` to `false` if using a config file.
 
-2. Set all of the appropriate environment variables or mount your config file. Set `ENVIRON_CONFIG` to `false` if using a config file.
-
-3. Run `docker compose up` and wait.
+2. Run `docker compose up` and wait.
 
 ## Thanks
 
