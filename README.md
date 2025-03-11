@@ -6,7 +6,7 @@ Transfer all torrents in [Transmission](https://transmissionbt.com/) to [qBittor
 
 **Warning: Use with caution! I am not responsible for any consequences.**
 
-## Usage
+## Usage - Script
 
 1. Download this repository.
 
@@ -38,6 +38,14 @@ Transfer all torrents in [Transmission](https://transmissionbt.com/) to [qBittor
 6. Run the script: `python3 main.py` or `python main.py`.
 
 7. After running, start torrents manually.
+
+## Usage - Compose
+
+1. Look at provided `compose.yaml` file to example on how to use.
+
+2. Set all of the appropriate environment variables or mount your config file. Set `ENVIRON_CONFIG` to `false` if using a config file.
+
+3. Run `docker compose up` and wait.
 
 ## Thanks
 
